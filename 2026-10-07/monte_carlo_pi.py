@@ -52,13 +52,14 @@ def main():
     n_values = 10 ** np.arange(2, 8)  # 10^2 ... 10^7
     n_runs = 20  # independent repetitions per N
 
-    # errors[i, j] = |pi_hat - pi| of run j with n_values[i] points
-    errors = np.empty((len(n_values), n_runs))
+    # estimates[i, j] = pi_hat of run j with n_values[i] points
+    estimates = np.empty((len(n_values), n_runs))
     for i, n in enumerate(n_values):
         for j in range(n_runs):
             # a different seed for every (i, j), so all runs are independent
             seed = i * n_runs + j
-            errors[i, j] = abs(estimate_pi(n, seed=seed) - np.pi)
+            estimates[i, j] = estimate_pi(n, seed=seed)
+    errors = np.abs(estimates - np.pi)
 
     rms_error = np.sqrt(np.mean(errors**2, axis=1))
 
@@ -89,6 +90,12 @@ def main():
     fig.tight_layout()
     fig.savefig("error_vs_N.png", dpi=150)
     print("plot saved to error_vs_N.png")
+
+    # final result: first run with the largest N, uncertainty from the theory
+    n_max = n_values[-1]
+    print(f"\nResult for N = {n_max:.0e}:")
+    print(f"  estimate  pi = {estimates[-1, 0]:.6f} +- {sigma_theory(n_max):.6f}")
+    print(f"  exact     pi = {np.pi:.6f}")
 
 
 if __name__ == "__main__":

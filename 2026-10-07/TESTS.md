@@ -1,6 +1,6 @@
 # Erklärung der Tests
 
-Datei: `test_monte_carlo_pi.py` · 17 Testfälle · Laufzeit unter 1 s
+Datei: `test_monte_carlo_pi.py` · 17 Testfälle (alle drei Testdateien zusammen: 62, Laufzeit unter 1 s)
 
 ```bash
 ../.venv/bin/python -m pytest -v
@@ -171,3 +171,112 @@ absichtlich Fehler eingebaut habe:
 - **Fixe Seeds bedeuten fixe Stichprobe.** Die Tests prüfen den Schätzer für
   genau diese Seeds. Dass sie bei anderen Seeds ebenfalls bestehen würden, ist
   durch die 5σ-Schranken sehr wahrscheinlich, aber nicht getestet.
+
+---
+
+# Tests der Mehrecksmethode
+
+Datei: `test_polygon_pi.py` · 40 Testfälle
+
+Die Methode ist deterministisch, es braucht also keine Statistik. Dafür
+braucht es unabhängige Referenzwerte. Verwendet werden drei:
+
+1. Werte, die man von Hand ausrechnen kann (Sechseck),
+2. die geschlossenen Formeln n·sin(π/n) und n·tan(π/n),
+3. das historische Ergebnis von Archimedes.
+
+Die Formeln in 2. enthalten π. In der Methode selbst wäre das ein
+Zirkelschluss, als Referenz im Test ist es zulässig.
+
+### `test_number_of_sides`
+
+6, 12 und 96 Seiten nach 0, 1 und 4 Verdopplungen.
+
+### `test_hexagon`
+
+Startwerte: Das eingeschriebene Sechseck besteht aus 6 gleichseitigen Dreiecken
+mit Seite 1, halber Umfang 3. Das umbeschriebene hat die Seite 2·tan(30°) =
+2/√3, halber Umfang 2√3.
+
+### `test_matches_closed_formula` (5 Fälle: 1, 2, 5, 10, 15 Verdopplungen)
+
+Beide Schranken müssen auf 13 Stellen (relativ 10⁻¹³) mit n·sin(π/n) und
+n·tan(π/n) übereinstimmen. Das ist der schärfste Test: Er prüft die
+Rekursionsformeln direkt, über 15 Schritte hinweg.
+
+### `test_archimedes_96_gon`
+
+Archimedes fand mit dem 96-Eck 223/71 < π < 22/7. Seine Brüche sind leicht nach
+außen gerundet, unsere Schranken müssen also dazwischen liegen:
+223/71 < unten < π < oben < 22/7. Eine Referenz, die nicht von mir stammt.
+
+### `test_pi_lies_between_the_bounds` (21 Fälle: 0 bis 20 Verdopplungen)
+
+unten < π < oben. Nur bis 20, weil die Schranke ab 24 Verdopplungen durch
+Rundungsfehler verletzt wird (dort ist der Abstand zu π nur noch ca. 10⁻¹⁵).
+
+### `test_error_shrinks_by_factor_4_per_doubling` (9 Fälle: 1 bis 9)
+
+Der Abstand oben − unten muss pro Verdopplung um den Faktor 4 ± 5 % schrumpfen
+(Fehler ∝ 1/n²). Start erst beim Zwölfeck: Vom Sechseck zum Zwölfeck ist der
+Faktor 4.24, das Gesetz gilt erst für große n. Dieser Test war in der ersten
+Fassung falsch (Start bei 0) und schlug bei richtigem Code fehl.
+
+### `test_reaches_machine_precision`
+
+Nach 30 Verdopplungen müssen beide Schranken auf 10⁻¹⁴ bei π liegen. Prüft,
+dass die Rekursion numerisch stabil ist und nicht bei vielen Schritten wieder
+Stellen verliert.
+
+### `test_negative_doublings_raise`
+
+Negative Anzahl → `ValueError`.
+
+### Test der Tests
+
+| Eingebauter Fehler | rot | grün | erkannt? |
+|---|---:|---:|---|
+| arithmetisches statt geometrisches Mittel für `lower` | 24 | 16 | ja |
+| arithmetisches statt harmonisches Mittel für `upper` | 26 | 14 | ja |
+| Startwert 3.0001 statt 3 | 22 | 18 | ja |
+| `6 * 2 * k` statt `6 * 2**k` Seiten | 4 | 36 | ja |
+
+Anders als bei Monte Carlo wird hier auch ein kleiner Fehler (10⁻⁴ im
+Startwert) erkannt, weil ohne Zufall auf 13 Stellen geprüft werden kann.
+
+# Tests des Laufzeitvergleichs
+
+Datei: `test_compare_methods.py` · 5 Testfälle
+
+### `test_correct_digits`
+
+Fehler 10⁻⁵ ↔ 5 Stellen, 10⁻¹² ↔ 12 Stellen. Dazu 22/7 = 3.1428…: Fehler
+1.3·10⁻³, also 2.9 Stellen (zwei Nachkommastellen stimmen).
+
+### `test_mc_points_needed_is_inverse_of_sigma_theory`
+
+`mc_points_needed(Fehler)` ist die Umkehrung von `sigma_theory(N)`. Setzt man
+das Ergebnis wieder ein, muss der ursprüngliche Fehler herauskommen.
+
+### `test_mc_two_more_digits_cost_factor_10000`
+
+Zwei Stellen mehr → 10⁴-mal mehr Punkte.
+
+### `test_time_call_measures_a_known_duration`
+
+Die Zeitmessung wird an etwas mit bekannter Dauer geprüft: `time.sleep(0.02)`
+muss als 20 bis 50 ms gemessen werden. Die obere Grenze ist großzügig, weil
+`sleep` länger dauern darf als verlangt.
+
+### `test_time_call_returns_time_per_call`
+
+Mit `number=5` muss die Zeit **eines** Aufrufs herauskommen (10 ms), nicht die
+Summe (50 ms).
+
+### Nicht getestet
+
+- **Die gemessenen Laufzeiten selbst.** Sie hängen vom Rechner und seiner
+  Auslastung ab; ein Test wie „Vieleck schneller als 5 µs“ wäre unzuverlässig.
+- **`main()` von `compare_methods.py`** (Tabellen, Hochrechnung, Plot). Nur
+  durch Ausführen und Ansehen geprüft.
+- **`format_duration`** (reine Ausgabeformatierung).
