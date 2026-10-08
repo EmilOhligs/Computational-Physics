@@ -1,7 +1,7 @@
 # Computational Physics
 
-In diesem Ordner werden die Projekte aus der VU Computational Physics an der
-Universität Wien (WS 2026/27) umgesetzt.
+This folder contains the projects from the course VU Computational Physics at
+the University of Vienna (winter semester 2026/27).
 
-Jede Übung liegt in einem eigenen Unterordner, benannt nach dem Datum der
-Einheit (z. B. `2026-10-07`).
+Each exercise lives in its own subfolder, named after the date of the session
+(e.g. `2026-10-07`).
