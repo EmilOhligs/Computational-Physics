@@ -123,14 +123,23 @@ Jede Gleitkommaoperation rundet auf etwa 16 Stellen
 
 Typische Größenordnung des Unterschieds:
 
-- **naive DFT:** Jedes $\hat a_k$ ist eine Summe aus $N$ Termen. Die
-  Rundungsfehler sammeln sich mit $N$ an. Dazu kommt, dass
-  $e^{-2\pi i\, jk/N}$ für große $jk$ ungenauer wird, weil das Argument groß ist
+- **naive DFT:** Jedes $\hat a_k$ ist eine Summe aus $N$ Termen. Wie stark
+  sich die Rundungsfehler ansammeln, hängt davon ab, **wie** summiert wird:
+  Eine einfache Schleife `s += ...` sammelt Fehler $\propto N$ an, die
+  paarweise Summation von `np.sum` nur $\propto \log N$. Dazu kommt, dass
+  $e^{-2\pi i\, jk/N}$ für große $jk$ ungenauer wird, weil schon das Argument
+  mit einem absoluten Fehler $\sim \varepsilon \cdot 2\pi jk/N$ gerundet wird
   (Abhilfe: $jk \bmod N$ verwenden).
 - **FFT:** Jeder Wert durchläuft nur $\log_2 N$ Stufen. Der Fehler wächst
-  ungefähr mit $\log N$ und ist deshalb kleiner.
+  ungefähr mit $\log N$.
 
-Ein Unterschied in der Größenordnung $10^{-13}$ bis $10^{-15}$ (relativ zur
+**Korrektur nach der Messung (Notebook, 1b):** Ursprünglich stand hier, die
+naive DFT sei wegen der $N$ Summanden ungenauer als die FFT. Gemessen ist sie
+mit `np.sum` und dem Modulo-Trick bis $N = 4096$ genauso genau (relativer
+Fehler $\sim 4\cdot10^{-16}$). Ohne Modulo-Trick wächst ihr Fehler dagegen
+$\propto N$ (auf $8\cdot10^{-13}$ bei $N = 4096$).
+
+Ein Unterschied in der Größenordnung $10^{-13}$ bis $10^{-16}$ (relativ zur
 Größe der Werte) ist also kein Fehler, sondern zu erwarten. Ein Unterschied von
 $10^{-3}$ wäre ein Fehler.
 
