@@ -1,13 +1,15 @@
 {
   "extraKnownMarketplaces": {
     "claude-mods": {
-      "source": { "source": "github", "repo": "EmilOhligs/claude-mods" },
+      "source": {
+        "source": "github",
+        "repo": "EmilOhligs/claude-mods"
+      },
       "autoUpdate": true
     }
   },
   "enabledPlugins": {
     "token-counter@claude-mods": true,
-    "team-delegate@claude-mods": true,
-    "skills-collection@claude-mods": true
+    "team-delegate@claude-mods": true
   }
 }
