@@ -3,8 +3,8 @@ title: Fast Fourier Transform
 aliases: FFT, Cooley-Tukey
 area: fourier
 summary: Berechnet die DFT in $\mathcal{O}(N\log N)$ statt $\mathcal{O}(N^2)$, indem sie rekursiv in gerade und ungerade Indizes zerlegt.
-links: diskrete-fourier-transformation, rundungsfehler
-sources: 2026-10-14/THEORIE.md, 2026-10-14/exercise_1_fft.ipynb
+links: diskrete-fourier-transformation, rundungsfehler, faltung-per-fft
+sources: 2026-10-14/THEORIE.md, 2026-10-14/exercise_1_fft.ipynb, 2026-10-21/THEORIE.md
 ---
 ## Idee (Cooley-Tukey, radix-2)
 
@@ -33,6 +33,7 @@ $\log_2 N$ Ebenen mit je $\mathcal{O}(N)$ Arbeit ergeben $\mathcal{O}(N\log N)$.
 
 ## Numerische Fallstricke
 
-- Radix-2 braucht $N = 2^p$; andere Längen brauchen andere Zerlegungen (numpy kann das).
+- Radix-2 braucht $N = 2^p$; andere Längen brauchen andere Zerlegungen. numpy (pocketfft) zerlegt in beliebige Primfaktoren (Mixed Radix): Glatte Längen wie $2\cdot3^4 5^4$ sind so schnell wie Zweierpotenzen. Ein großer Primfaktor ($L = 2\cdot65537$) macht sie gemessen 5-mal langsamer (Bluestein, weiter $O(N\log N)$). Wo man padden darf, `scipy.fft.next_fast_len` nehmen.
+- Für reelle Daten `rfft`/`irfft`: nur das halbe Spektrum, gemessen 40 % schneller.
 - Rundungsfehler wachsen nur etwa mit $\log N$, siehe [[Rundungsfehler]].
 - Eine rekursive Python-FFT ist viel langsamer als `numpy.fft` (C-Code), schlägt aber für großes $N$ die naive DFT.
