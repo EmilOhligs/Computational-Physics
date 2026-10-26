@@ -8,8 +8,5 @@
       "autoUpdate": true
     }
   },
-  "enabledPlugins": {
-    "token-counter@claude-mods": true,
-    "team-delegate@claude-mods": true
-  }
+  
 }
