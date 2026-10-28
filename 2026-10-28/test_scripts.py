@@ -35,3 +35,11 @@ def test_1e_eigenvalues_and_first_unstable_mode(tmp_path):
     first = [float(s) for s in re.findall(r"first unstable mode lambda = ([-\d.e+]+)", out)]
     assert first == [-10, -10, -10]
     assert (tmp_path / "stability_1e.png").exists() and (tmp_path / "modes_1e.png").exists()
+
+
+def test_1f_step_counts_explicit_and_implicit_euler(tmp_path):
+    out = run("plot_1f.py", tmp_path)
+    counts = dict(re.findall(r"(explicit|implicit) Euler: n = (\d+)", out))
+    assert counts == {"explicit": "4999", "implicit": "180"}
+    assert "dt_crit explicit Euler = 0.00200" in out
+    assert (tmp_path / "stiff_1f.png").exists()
