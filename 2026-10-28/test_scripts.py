@@ -26,3 +26,12 @@ def test_1d_critical_dt_times_largest_rate_is_constant(tmp_path):
     assert len(below) == len(above) == 3
     assert max(below) < 1 < min(above)
     assert (tmp_path / "instability_1d.png").exists()
+
+
+def test_1e_eigenvalues_and_first_unstable_mode(tmp_path):
+    out = run("plot_1e.py", tmp_path)
+    eigenvalues = sorted(float(s) for s in re.findall(r"lambda = ([-\d.e+]+), eigenvector", out))
+    assert eigenvalues == pytest.approx([-10, -1, 0])
+    first = [float(s) for s in re.findall(r"first unstable mode lambda = ([-\d.e+]+)", out)]
+    assert first == [-10, -10, -10]
+    assert (tmp_path / "stability_1e.png").exists() and (tmp_path / "modes_1e.png").exists()
