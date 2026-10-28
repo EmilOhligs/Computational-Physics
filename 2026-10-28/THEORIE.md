@@ -156,3 +156,49 @@ geprüft werden, wie in `test_ode.py` mit `test_single_steps_match_series`.
 
 Bei kleinem $\Delta t$ sollten alle Verfahren übereinstimmen, da sie dann
 alle gegen die exakte Lösung konvergieren.
+
+---
+
+## 5. Genauigkeit in Abhängigkeit von $\Delta t$ (Aufgabe 1c)
+
+Gemessen wird der maximale Fehler von $C(t)$ auf $[0, 10]$ für $k_1 = 1$, $k_2 = 10$
+(`max_error` in `ode.py`, Plot mit `plot_1c.py` → `accuracy_1c.png`):
+
+$$
+e(\Delta t) = \max_n |C_n - C(t_n)|.
+$$
+
+### Erwartung
+
+Ein Verfahren der Ordnung $p$ macht pro Schritt einen lokalen Fehler
+$\mathcal O(\Delta t^{p+1})$. Über $N = T/\Delta t$ Schritte summiert sich das zum
+globalen Fehler $e \approx c\,\Delta t^p$. Im log-log-Plot entsteht eine Gerade:
+
+$$
+\log e = p \log \Delta t + \log c,
+$$
+
+mit der Steigung $p$. Erwartet werden also 1 (Euler, impliziter Euler), 2 (Heun) und 4 (RK4).
+Die Steigung bestimmt `order` per linearer Regression von $\log e$ gegen $\log \Delta t$.
+
+### Messung
+
+$\Delta t = 0{,}1 / 2^k$ mit $k = 0, \dots, 8$; Fit über die kleinsten $\Delta t$
+(bei RK4 über $\Delta t = 0{,}025 \dots 0{,}003$):
+
+- expliziter Euler: $p = 1{,}00$
+- Heun: $p = 2{,}01$
+- RK4: $p = 4{,}09$
+- impliziter Euler: $p = 1{,}00$
+
+### Beobachtungen
+
+- Bei $\Delta t = 0{,}1$ liegen expliziter Euler und Heun noch über ihrer Geraden: $k_2 \Delta t = 1$ ist
+  kein kleiner Parameter, die Asymptotik $e \sim \Delta t^p$ gilt erst darunter.
+- Expliziter und impliziter Euler haben bei kleinem $\Delta t$ fast denselben Fehler
+  (etwa $8 \cdot 10^{-5}$ bei $\Delta t \approx 4 \cdot 10^{-4}$), mit entgegengesetztem
+  Vorzeichen: Der lokale Fehler ist $\mp\tfrac12 \Delta t^2 J^2 x$ (Taylor von $1+z$ bzw. $(1-z)^{-1}$ gegen $e^z$).
+- RK4 erreicht bei $\Delta t \approx 4 \cdot 10^{-4}$ bereits $8 \cdot 10^{-14}$, also fast die
+  Rundungsgrenze. Bei noch kleinerem $\Delta t$ würde der Fehler nicht weiter fallen.
+- Für gleiche Genauigkeit von $10^{-6}$ braucht RK4 etwa $\Delta t = 0{,}02$, Heun
+  etwa $0{,}0012$ und Euler etwa $5 \cdot 10^{-6}$. Ein höherer Aufwand pro Schritt lohnt sich deutlich.
