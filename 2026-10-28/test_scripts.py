@@ -43,3 +43,25 @@ def test_1f_step_counts_explicit_and_implicit_euler(tmp_path):
     assert counts == {"explicit": "4999", "implicit": "180"}
     assert "dt_crit explicit Euler = 0.00200" in out
     assert (tmp_path / "stiff_1f.png").exists()
+
+
+def test_2a_robertson_implicit_converges_and_explicit_blows_up(tmp_path):
+    out = run("plot_2a.py", tmp_path)
+    rows = re.findall(r"implicit Euler, n = (\d+): A, B, C at t = 1e5 = ([\d.]+), ([\d.e+-]+), ([\d.]+), max \|A \+ B \+ C - 1\| = ([\d.e+-]+)", out)
+    assert [r[0] for r in rows] == ["400", "1600"]
+    a = [float(r[1]) for r in rows]
+    assert a[1] == pytest.approx(0.0179, abs=5e-4)
+    assert abs(a[0] - a[1]) < 2e-3
+    assert all(float(r[4]) < 1e-10 for r in rows)
+    blow = re.findall(r"explicit Euler, dt = 0\.001: blows up at t = ([\d.]+)", out)
+    assert len(blow) == 1 and 0 < float(blow[0]) < 40
+    assert (tmp_path / "robertson_2a.png").exists()
+
+
+def test_2b_lorenz_separation_time_independent_of_dt(tmp_path):
+    out = run("plot_2b.py", tmp_path)
+    times = [float(s) for s in re.findall(r"RK4, dt = [\d.e-]+: trajectories separate \(distance > 1\) at t = ([\d.]+)", out)]
+    assert len(times) == 2
+    assert 20 < times[0] < 35
+    assert times[0] == pytest.approx(times[1], abs=0.5)
+    assert (tmp_path / "lorenz_2b.png").exists()
