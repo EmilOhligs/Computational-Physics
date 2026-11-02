@@ -2,7 +2,7 @@
 
 Exercise 3 · 28.10.2026
 
-Dieses Dokument erklärt die Theorie zu den Teilaufgaben 1a und 1b. Die Verweise
+Dieses Dokument erklärt die Theorie zu den Teilaufgaben 1a bis 1f. Die Verweise
 (1a, 1b, …) beziehen sich auf die Angabe in `exercise (1).pdf`, Code in `ode.py`,
 Tests in `test_ode.py`.
 
@@ -202,3 +202,83 @@ $\Delta t = 0{,}1 / 2^k$ mit $k = 0, \dots, 8$; Fit über die kleinsten $\Delta 
   Rundungsgrenze. Bei noch kleinerem $\Delta t$ würde der Fehler nicht weiter fallen.
 - Für gleiche Genauigkeit von $10^{-6}$ braucht RK4 etwa $\Delta t = 0{,}02$, Heun
   etwa $0{,}0012$ und Euler etwa $5 \cdot 10^{-6}$. Ein höherer Aufwand pro Schritt lohnt sich deutlich.
+
+---
+
+## 6. Kritischer Zeitschritt (Aufgabe 1d)
+
+Für die Testgleichung $\dot x = \lambda x$ ist ein Zeitschritt $x_{n+1} = R(\lambda\Delta t)\,x_n$.
+Die Lösung ist stabil genau dann, wenn $|R(z)| \le 1$ für $z = \lambda\Delta t$.
+Die Eigenwerte der Jacobimatrix $J$ sind $0, -k_1, -k_2$, deshalb gilt
+$\Delta t_\text{krit} = c / \max(k_1, k_2)$.
+
+Die Stabilitätsfunktionen $R(z)$ sind:
+
+- Euler: $R(z) = 1 + z$
+- Heun: $R(z) = 1 + z + z^2/2$
+- RK4: $R(z) = 1 + z + z^2/2 + z^3/6 + z^4/24$
+
+Gemessen mit `plot_1d.py` (Bisektion in `critical_dt`) ergeben sich folgende Werte für $c$:
+
+- expliziter Euler: $c = 2$
+- Heun: $c = 2$
+- RK4: $c = 2{,}785$
+
+Für alle fünf Paare $(k_1, k_2) = (1,1), (1,10), (1,100), (10,1), (50,10)$ ist $c$ gleich.
+Beispiel $k_1 = 1, k_2 = 10$: $\Delta t_\text{krit} = 0{,}2$ (Euler, Heun) bzw. $0{,}2785$ (RK4).
+
+Knapp über der Grenze ($1{,}05\,\Delta t_\text{krit}$): die schnelle Mode wächst mit
+wechselndem Vorzeichen ($R < -1$), die Lösung oszilliert von Schritt zu Schritt
+mit wachsender Amplitude. Max. Fehler bei $0{,}95$ / $1{,}05\,\Delta t_\text{krit}$:
+
+- Euler: $0{,}118$ / $10{,}8$
+- Heun: $0{,}0865$ / $13{,}4$
+- RK4: $0{,}0821$ / $130$
+
+---
+
+## 7. Eigenwerte und Stabilitätsgebiete (Aufgabe 1e)
+
+Für $k_1 = 1, k_2 = 10$ (aus `plot_1e.py`) sind die Eigenwerte von $J$:
+
+- $\lambda = 0$ mit Eigenvektor $(0, 0, 1)$: Endzustand, alles ist $C$
+- $\lambda = -1$ mit $(0{,}667;\ 0{,}074;\ -0{,}741)$: langsamer Zerfall von $A$
+- $\lambda = -10$ mit $(0;\ 0{,}707;\ -0{,}707)$: schneller Übergang $B \to C$
+
+Jede Lösung ist eine Summe der Eigenmoden, jede Mode wird pro Schritt mit
+$R(\lambda\Delta t)$ multipliziert.
+
+Mit wachsendem $\Delta t$ wandert $z = \lambda\Delta t$ auf der negativen reellen
+Achse nach links; zuerst verlässt die Mode $\lambda = -10$ das Stabilitätsgebiet.
+Gemessen bei $1{,}05\,\Delta t_\text{krit}$:
+
+- Euler: $|R| = 1{,}100$
+- Heun: $|R| = 1{,}105$
+- RK4: $|R| = 1{,}231$
+
+Bilder: `stability_1e.png`, `modes_1e.png`.
+
+Impliziter Euler: $R(z) = 1/(1 - z)$, für $\operatorname{Re} z \le 0$ gilt
+$|1 - z| \ge 1$, also $|R| \le 1$ in der ganzen linken Halbebene (A-stabil),
+daher kein $\Delta t_\text{krit}$.
+
+---
+
+## 8. Steifheit (Aufgabe 1f)
+
+Für $k_2 = 1000$, Ziel max. Fehler $\approx 10^{-2}$ (`plot_1f.py`,
+`steps_for_tolerance`):
+
+- Expliziter Euler: $n = 4999$ Schritte, $\Delta t = 0{,}002$ = genau
+  $\Delta t_\text{krit} = 2/k_2$; die Stabilität begrenzt $\Delta t$, nicht
+  die Genauigkeit, obwohl die schnelle Mode nach $t \approx 5/k_2$ längst
+  abgeklungen ist.
+- Impliziter Euler: $n = 180$, $\Delta t = 0{,}0556$; hier begrenzt nur
+  die Genauigkeit (Auflösung der langsamen Mode $e^{-t}$ und des
+  Anfangsübergangs).
+
+Faktor etwa 28 weniger Schritte, jeder Schritt kostet ein lineares 3×3-System.
+
+Definition: steif heißt, die Zeitskalen ($1/k_1$ gegen $1/k_2$) liegen weit
+auseinander, und die schnellste erzwingt bei expliziten Verfahren winzige Schritte.
+Bild: `stiff_1f.png`.
