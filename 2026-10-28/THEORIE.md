@@ -2,9 +2,9 @@
 
 Exercise 3 · 28.10.2026
 
-Dieses Dokument erklärt die Theorie zu den Teilaufgaben 1a bis 1f. Die Verweise
-(1a, 1b, …) beziehen sich auf die Angabe in `exercise (1).pdf`, Code in `ode.py`,
-Tests in `test_ode.py`.
+Dieses Dokument erklärt die Theorie zu den Aufgaben 1a bis 2b. Die Verweise
+(1a, 1b, …) beziehen sich auf die Angabe in `exercise (1).pdf`, Code in `ode.py`
+und `nonlinear.py`, Tests in `test_ode.py`, `test_nonlinear.py` und `test_scripts.py`.
 
 ---
 
@@ -282,3 +282,102 @@ Faktor etwa 28 weniger Schritte, jeder Schritt kostet ein lineares 3×3-System.
 Definition: steif heißt, die Zeitskalen ($1/k_1$ gegen $1/k_2$) liegen weit
 auseinander, und die schnellste erzwingt bei expliziten Verfahren winzige Schritte.
 Bild: `stiff_1f.png`.
+
+---
+
+## 9. Robertson-Modell (Aufgabe 2a)
+
+$$
+\dot A = -k_1 A + k_3 BC, \qquad
+\dot B = k_1 A - k_2 B^2 - k_3 BC, \qquad
+\dot C = k_2 B^2
+$$
+
+mit $k_1 = 0{,}04$, $k_2 = 3\cdot 10^7$, $k_3 = 10^4$ und $(A, B, C)(0) = (1, 0, 0)$.
+
+### Impliziter Euler mit Newton
+
+Pro Schritt ist $x_{n+1} = y$ die Nullstelle von
+
+$$
+g(y) = y - x_n - \Delta t\, f(y).
+$$
+
+Newton: $(I - \Delta t\, J_f(y))\,\delta = -g(y)$, $y \leftarrow y + \delta$, Startwert $y = x_n$,
+Abbruch bei $\max|\delta| \le 10^{-12}\,(1 + \max|y|)$, sonst nach 50 Iterationen ein Fehler
+(`implicit_euler_f`). Die Jacobimatrix $J_f$ steht analytisch in `robertson_jac`.
+Für lineares $f = Jx$ ist $g$ linear, Newton ist nach einem Schritt fertig und liefert genau
+$(I - \Delta t J)\,x_{n+1} = x_n$ aus Teil 1.
+
+Das Zeitgitter ist logarithmisch, $t = 0, 10^{-6}, \dots, 10^5$ (`integrate_grid`), weil die
+Dynamik auf allen Zeitskalen passiert: B baut sich in $t \sim 10^{-3}$ auf, A zerfällt über $t \sim 10^2 \dots 10^5$.
+
+### Ergebnis
+
+`plot_2a.py`, Bild `robertson_2a.png`:
+
+- bei $t = 10^5$ mit 1600 Gitterpunkten: $A = 0{,}01808$, $B = 7{,}36\cdot10^{-8}$, $C = 0{,}98192$
+- mit 400 Gitterpunkten: $A = 0{,}01871$, also Unterschied $6\cdot 10^{-4}$, wie bei einem Verfahren erster Ordnung erwartet
+- $B$ erreicht höchstens etwa $3{,}6\cdot 10^{-5}$ und bleibt dort bis $t \approx 1$
+- $A + B + C = 1$ bleibt bis auf $2\cdot10^{-15}$ erhalten: die Summe der rechten Seiten ist null, und der implizite Euler erhält lineare Invarianten exakt (bis auf die Newton-Toleranz)
+
+### Warum explizite Verfahren versagen
+
+Die Jacobimatrix hat in B-Richtung den Eigenwert etwa $-2k_2 B - k_3 C$. Mit $B \approx 3{,}6\cdot10^{-5}$
+ist das etwa $-2000$, der explizite Euler braucht also $\Delta t < 2/2000 = 10^{-3}$.
+Gemessen: mit $\Delta t = 10^{-3}$ explodiert er bei $t = 9{,}35$. Für $t$ bis $10^5$ bräuchte er
+über $10^8$ Schritte, obwohl sich die Lösung dann nur noch langsam ändert. Wie in Abschnitt 8
+begrenzt die Stabilität den Schritt, nicht die Genauigkeit.
+
+### Code aus Teil 1 wiederverwenden?
+
+Nur teilweise. Die Verfahren in `ode.py` brauchen eine feste Matrix $J$. Die expliziten Verfahren gehen
+mit $f(x)$ statt $Jx$ direkt über (`euler_f`, `heun_f`, `rk4_f`). Der implizite Euler braucht statt
+eines linearen Systems eine Newton-Iteration mit $J_f(y)$, und das gleichmäßige Gitter von `integrate`
+reicht für $t$ bis $10^5$ nicht. Für lineares $f$ liefern die neuen Funktionen dasselbe wie die alten
+(Test `test_linear_f_matches_matrix_solvers`).
+
+---
+
+## 10. Lorenz-System (Aufgabe 2b)
+
+$$
+\dot x = \sigma (y - x), \qquad
+\dot y = x(\rho - z) - y, \qquad
+\dot z = xy - \beta z
+$$
+
+mit $\sigma = 10$, $\rho = 28$, $\beta = 8/3$ und $t \in [0, 40]$.
+
+### Ergebnis
+
+`plot_2b.py`, Bild `lorenz_2b.png`, RK4 von $(1, 1, 1)$ und $(1, 1, 1 + 10^{-8})$:
+
+- Die Bahnen laufen auf dem Attraktor ($x$ zwischen $-17$ und $20$, $z$ bis $48$) lange gemeinsam.
+- Der Abstand wächst im Mittel exponentiell, im semilog-Plot eine Gerade. Ein Fit von $\ln d$ über
+  $t \approx 10 \dots 27$ ergibt die Rate $0{,}84$ (der Literaturwert des größten Lyapunov-Exponenten ist $0{,}91$).
+- Der Abstand überschreitet 1 bei $t = 28{,}88$, mit $\Delta t = 10^{-3}$ und mit $\Delta t = 5\cdot10^{-4}$ gleich.
+  Danach sind die beiden Bahnen nicht mehr korreliert.
+- Abschätzung: $10^{-8}\, e^{0{,}84\, t} = 1$ ergibt $t \approx 22$, die richtige Größenordnung. Genauer geht es nicht,
+  weil der Abstand nicht gleichmäßig wächst, sondern um die Gerade schwankt (Plot unten in `lorenz_2b.png`).
+
+### Bedeutung
+
+Das System ist chaotisch: kleine Störungen wachsen exponentiell. Auch Rundungs- und Diskretisierungsfehler
+sind solche Störungen. Zusätzlich gemessen: dieselbe Startbahn mit $\Delta t = 10^{-3}$ und $5\cdot 10^{-4}$
+trennt sich ebenfalls bei $t \approx 28{,}9$, expliziter Euler gegen RK4 schon bei $t \approx 5{,}1$,
+Heun gegen RK4 bei $t \approx 16{,}9$. Die einzelne Bahn ist also nur bis etwa $t \approx 28$ verlässlich,
+der Attraktor (Form, Wertebereich) dagegen bei allen Verfahren derselbe.
+
+---
+
+## 11. Welchem Verfahren vertrauen ohne exakte Lösung? (Aufgabe 2)
+
+- **Konvergenz prüfen:** dieselbe Rechnung mit halbem $\Delta t$ oder feinerem Gitter wiederholen
+  (Robertson 400 gegen 1600 Punkte, Lorenz $10^{-3}$ gegen $5\cdot10^{-4}$). Ändert sich das Ergebnis
+  kaum, ist der Diskretisierungsfehler klein.
+- **Erhaltungsgrößen prüfen:** $A + B + C = 1$ beim Robertson-Modell.
+- **Verfahren vergleichen:** höhere gegen niedrigere Ordnung; stimmen sie überein, sind beide genau genug.
+- **Stabilität beachten:** bei steifen Problemen dem impliziten Verfahren vertrauen; ein explizites Ergebnis
+  mit zu großem $\Delta t$ ist nicht ungenau, sondern unbrauchbar (Blow-up).
+- **Bei Chaos:** der einzelnen Bahn nur bis zur Trennzeit vertrauen, danach nur Statistik und Attraktor.
