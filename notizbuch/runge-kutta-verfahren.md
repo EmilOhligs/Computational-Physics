@@ -3,8 +3,8 @@ title: Runge-Kutta-Verfahren
 aliases: RK4, Heun, Runge-Kutta
 area: dgl
 summary: Explizite Einschrittverfahren, die mehrere Steigungen pro Schritt mitteln; Heun hat Ordnung 2, das klassische RK4 Ordnung 4.
-links: euler-verfahren, stabilitaetsgebiet
-sources: 2026-10-28/THEORIE.md, 2026-10-28/ode.py, 2026-10-28/plot_1c.py
+links: euler-verfahren, stabilitaetsgebiet, symplektische-integratoren
+sources: 2026-10-28/THEORIE.md, 2026-10-28/ode.py, 2026-10-28/plot_1c.py, 2026-11-04/THEORIE.md, 2026-11-04/plot_1c.py
 ---
 ## Idee und Definition
 
@@ -37,6 +37,7 @@ mit $k_1 = f(x_n)$, $k_2 = f(x_n + \tfrac{\Delta t}{2} k_1)$, $k_3 = f(x_n + \tf
 - RK4 erreicht bei $\Delta t \approx 4\cdot10^{-4}$ schon $8\cdot10^{-14}$, also fast die Rundungsgrenze; feiner wird es nicht mehr.
 - Explizite Verfahren haben ein beschränktes [[Stabilitätsgebiet]]: $\Delta t_\text{krit} \cdot \max(k_1, k_2) = 2$ für Heun und $2{,}785$ für RK4. Bei steifen Problemen hilft die hohe Ordnung deshalb nicht.
 - Bei chaotischen Systemen (Lorenz) bleibt auch RK4 nur bis zur Trennzeit verlässlich, dort aber deutlich länger als Euler ($t \approx 28{,}9$ gegen Abweichung schon bei $5{,}1$).
+- Über lange Zeiten driften Heun und RK4 in der Energie, weil $|R(i\omega\Delta t)| \ne 1$: Heun $|R|^2 = 1 + x^4/4$ (nach außen), RK4 $1 - x^6/72$ (nach innen). Beim Mond wächst der Energiefehler von Heun linear auf $4{,}8\cdot10^{-2}$ nach 100 Umläufen; [[Symplektische Integratoren]] mit niedrigerer Ordnung sind dann besser.
 
 ## In Python
 

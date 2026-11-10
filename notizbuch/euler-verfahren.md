@@ -3,8 +3,8 @@ title: Euler-Verfahren
 aliases: expliziter Euler, impliziter Euler, Rückwärts-Euler
 area: dgl
 summary: Einfachstes Einschrittverfahren für $\dot x = f(x)$, explizit $x_{n+1} = x_n + \Delta t\, f(x_n)$ oder implizit $x_{n+1} = x_n + \Delta t\, f(x_{n+1})$; beide haben Ordnung 1, nur der implizite ist A-stabil.
-links: runge-kutta-verfahren, stabilitaetsgebiet, steife-differentialgleichungen
-sources: 2026-10-28/THEORIE.md, 2026-10-28/ode.py, 2026-10-28/nonlinear.py
+links: runge-kutta-verfahren, stabilitaetsgebiet, steife-differentialgleichungen, symplektische-integratoren
+sources: 2026-10-28/THEORIE.md, 2026-10-28/ode.py, 2026-10-28/nonlinear.py, 2026-11-04/THEORIE.md, 2026-11-04/orbit.py
 ---
 ## Idee und Definition
 
@@ -31,6 +31,8 @@ Beim expliziten Euler wird die Steigung am Anfang des Schritts genommen, beim im
 - Implizit $R(z) = 1/(1 - z)$, $|R| \le 1$ in der ganzen linken Halbebene (A-stabil), also kein kritischer Zeitschritt.
 - Bei [[Steife Differentialgleichungen]] ist der Unterschied riesig: für $k_2 = 1000$ und Fehler $10^{-2}$ braucht der explizite Euler 4999 Schritte (genau an der Stabilitätsgrenze $\Delta t = 0{,}002$), der implizite 180.
 - Für $10^{-6}$ Genauigkeit braucht Euler etwa $\Delta t = 5\cdot 10^{-6}$, [[Runge-Kutta-Verfahren]] (RK4) nur $0{,}02$. Für Genauigkeit lohnt sich Euler kaum.
+- Bei Schwingungen und Umlaufbahnen ist keiner der beiden brauchbar: $|1 + i\omega\Delta t| > 1$, der explizite Euler spiralt nach außen (Mond nach 10 Umläufen mit $\Delta t = 6$ h auf $2{,}76\,r_M$), $|1/(1 - i\omega\Delta t)| < 1$, der implizite Euler dämpft und stürzt den Mond nach 58 Schritten fast ins Zentrum. Ein Tausch der Reihenfolge, erst $\mathbf v$, dann $\mathbf r$ mit dem neuen $\mathbf v$, ergibt [[Symplektische Integratoren]].
+- Newton für den impliziten Schritt: Startwert ist der explizite Euler-Schritt, er liegt nur $O(\Delta t^2)$ neben der Lösung; beim Mond reichen 3 Iterationen.
 
 ## In Python
 
