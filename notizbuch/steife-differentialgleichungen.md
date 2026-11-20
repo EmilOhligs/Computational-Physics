@@ -1,10 +1,10 @@
 ---
 title: Steife Differentialgleichungen
-aliases: Steifheit, Robertson-Modell, Newton für impliziten Euler
+aliases: Steifheit, Robertson-Modell, Newton für impliziten Euler, Crank-Nicolson bei Sprüngen
 area: dgl
 summary: Steif ist eine DGL, wenn ihre Zeitskalen weit auseinanderliegen und die schnellste bei expliziten Verfahren winzige Schritte erzwingt, obwohl sie längst abgeklungen ist; implizite Verfahren lösen das.
-links: euler-verfahren, stabilitaetsgebiet
-sources: 2026-10-28/THEORIE.md, 2026-10-28/nonlinear.py, 2026-10-28/plot_1f.py, 2026-10-28/plot_2a.py
+links: euler-verfahren, stabilitaetsgebiet, linienmethode, von-neumann-stabilitaetsanalyse
+sources: 2026-10-28/THEORIE.md, 2026-10-28/nonlinear.py, 2026-10-28/plot_1f.py, 2026-10-28/plot_2a.py, 2026-11-11/exercise_5_fd.ipynb
 ---
 ## Idee und Definition
 
@@ -30,6 +30,8 @@ mit $k_1 = 0{,}04$, $k_2 = 3\cdot10^7$, $k_3 = 10^4$.
 - Beim Robertson-Modell ist der Eigenwert in B-Richtung etwa $-2k_2B - k_3C \approx -2000$. Der explizite Euler mit $\Delta t = 10^{-3}$ explodiert deshalb bei $t = 9{,}35$; bis $t = 10^5$ bräuchte er über $10^8$ Schritte.
 - Ein instabiles Ergebnis ist nicht ungenau, sondern unbrauchbar. Ohne exakte Lösung erkennt man das am Blow-up oder an negativen Konzentrationen.
 - Kontrolle ohne exakte Lösung: Erhaltung $A + B + C = 1$ (gemessen bis auf $2\cdot10^{-15}$) und feineres Gitter zum Vergleich.
+- **Wärmeleitung ist steif:** Nach der [[Linienmethode]] reichen die Eigenwerte bei $N = 99$ von 9,87 bis 39 990 (Verhältnis 4052). Der explizite Euler bräuchte bis $t = 0{,}1$ mindestens 2000 Schritte, impliziter Euler und Crank-Nicolson kommen mit 10 aus ($\Delta t = 0{,}01$).
+- **A-stabil reicht nicht:** Mit Rechteckpuls als Start (enthält alle Moden) und $\Delta t = 0{,}01$ ist $z_N = -400$. Crank-Nicolson dämpft die höchste Mode nur mit $R = -0{,}990$ pro Schritt, exakt wäre $e^{-400} \approx 0$. Fehler gegen die ODE-Lösung bei $t = 0{,}1$: Crank-Nicolson 0,33, impliziter Euler 0,016, mit Überschwingern an den Sprungstellen. Nach 100 Schritten ist die Zickzack-Mode noch bei 37 % und ab $t \approx 0{,}47$ größer als die Grundmode. Der implizite Euler (L-stabil) hat sie nach 5 Schritten auf Rundungsniveau. CN ist erst unter $\Delta t \approx 1{,}6\cdot10^{-3}$ wieder besser.
 - Newton braucht eine Abbruchbedingung und eine Fehlermeldung, wenn er nicht konvergiert.
 - Siehe [[Stabilitätsgebiet]] für den Grund und [[Euler-Verfahren]] für die Formeln.
 
