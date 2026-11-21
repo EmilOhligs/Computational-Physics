@@ -36,6 +36,7 @@ Höhere Ordnung durch breitere Sterne (Gewichte für $-u''$, ohne $1/\Delta x^2$
 
 - **Rundungsminimum:** Der Fehler fällt nicht beliebig. In 1D ist das Minimum $2{,}3\cdot10^{-10}$ bei $\Delta x = 1{,}5\cdot10^{-5}$ ($N = 65535$), darunter wächst er wieder auf $6\cdot10^{-7}$ bei $N \approx 10^6$. Ursache: Einträge $\sim 1/\Delta x^2$, Auslöschung im Stern, Kondition $\kappa(A) \approx 4/(\pi^2\Delta x^2)$, siehe [[Rundungsfehler]].
 - Höhere Ordnung erreicht den Rundungsboden schon bei gröberem Gitter: Ordnung 6 hat $2\cdot10^{-13}$ bei $N = 127$.
+- **Sprünge in den Daten abtasten:** Liegt ein Sprung auf einem Gitterpunkt, kostet punktweises Abtasten ($u_0 = 0$ am Sprung) eine Ordnung. Beim Rechteckpuls (Wärmeleitung, $t = 0{,}1$) gibt das Ordnung 1, weil die Wärmemenge um $O(\Delta x)$ falsch ist. Mit dem Mittelwert $\tfrac12$ am Sprung kommt Ordnung 2 heraus ($1{,}1\cdot10^{-8}$ bei $N = 639$).
 - Breite Sterne ragen am Rand über das Gebiet hinaus, siehe [[Randbehandlung bei finiten Differenzen]].
 - In 2D muss die rechte Seite in derselben Reihenfolge zum Vektor werden wie die Unbekannten: `meshgrid(x, y, indexing="ij")` und `.ravel()` passen zu `kron(A, I)` für den ersten Index. Test mit unsymmetrischer Quelle $\sin\pi x\,\sin 2\pi y$ findet vertauschte Achsen.
 - Für zeitabhängige Probleme wird $A$ zum Ausgangspunkt der [[Linienmethode]].

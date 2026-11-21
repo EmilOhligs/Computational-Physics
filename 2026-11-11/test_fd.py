@@ -1,11 +1,14 @@
-"""Tests for exercise 5, part 1a.
+"""Tests for exercise 5 (finite differences), parts 1a-2d.
 
-What each test checks: THEORIE.md, section 1a.
+What each test checks: THEORIE.md, section of the same name.
 """
 import numpy as np
+import pytest
 import scipy.sparse as sp
 
-from fd import grid, laplacian, solve
+import fd
+from fd import (crank_nicolson_step, grid, implicit_euler_step, laplacian, laplacian_2d, pulse_series, solve,
+                solve_2d, solve_neumann)
 
 
 def test_grid_three_points_have_spacing_quarter():
@@ -71,7 +74,6 @@ def test_solve_sine_source_is_close_to_continuous_solution():
 
 
 # 1c: higher-order stencils
-import pytest  # noqa: E402
 
 
 def _rows(N, order, boundary="reduce"):
@@ -140,15 +142,11 @@ def test_reduce_solve_order4_converges_faster_than_third_order():
 
 # 1d: Neumann boundary u'(1) = 0
 def _neumann_error(bc, N):
-    from fd import solve_neumann
-
     x, u = solve_neumann(lambda x: np.pi**2 / 4 * np.sin(np.pi * x / 2), N, bc)
     return x, u - np.sin(np.pi * x / 2)
 
 
 def test_neumann_grid_includes_right_endpoint():
-    from fd import solve_neumann
-
     x, _ = solve_neumann(lambda x: 0 * x, 7)
     assert len(x) == 8
     assert x[-1] == 1.0
@@ -156,8 +154,6 @@ def test_neumann_grid_includes_right_endpoint():
 
 
 def test_neumann_ghost_is_exact_for_quadratic_solution():
-    from fd import solve_neumann
-
     x, u = solve_neumann(lambda x: 2 + 0 * x, 15, "ghost")
     assert np.allclose(u, x * (2 - x), atol=1e-10)
 
@@ -183,8 +179,6 @@ def _mode1(N):
 
 
 def test_implicit_euler_step_matches_dense_solve_with_sparse_matrix():
-    from fd import implicit_euler_step
-
     x, J, _ = _mode1(12)
     u0 = x * (1 - x) ** 2
     want = np.linalg.solve(np.eye(12) - 0.01 * J.toarray(), u0)
@@ -196,23 +190,17 @@ def test_implicit_euler_step_matches_dense_solve_with_sparse_matrix():
     ("crank_nicolson_step", lambda z: (1 + z / 2) / (1 - z / 2)),
 ])
 def test_implicit_steps_scale_eigenvector_by_stability_function(name, R):
-    import fd
-
     x, J, lam1 = _mode1(20)
     u0, dt = np.sin(np.pi * x), 0.003
     assert np.allclose(getattr(fd, name)(J, u0, dt), R(-lam1 * dt) * u0, rtol=1e-12)
 
 
 def test_pulse_series_at_start_is_one_inside_and_zero_outside():
-    from fd import pulse_series
-
     u = pulse_series(np.array([0.1, 0.5, 0.9]), 0.0, kmax=4001)
     assert np.allclose(u, [0, 1, 0], atol=1e-3)
 
 
 def test_pulse_series_first_mode_decays_with_pi_squared():
-    from fd import pulse_series
-
     x, t = np.linspace(0, 1, 7), 0.05
     b1 = 2 / np.pi * (np.cos(np.pi / 4) - np.cos(3 * np.pi / 4))
     assert np.allclose(pulse_series(x, t, kmax=1), b1 * np.exp(-np.pi**2 * t) * np.sin(np.pi * x))
@@ -220,16 +208,12 @@ def test_pulse_series_first_mode_decays_with_pi_squared():
 
 # 1e: 2D Poisson on the unit square
 def test_laplacian_2d_center_row_is_five_point_stencil():
-    from fd import laplacian_2d
-
     A = laplacian_2d(3)
     assert sp.issparse(A) and A.shape == (9, 9)
     assert np.array_equal(A.toarray()[4] * grid(3)[1] ** 2, [0, -1, 0, -1, 4, -1, 0, -1, 0])
 
 
 def test_laplacian_2d_eigenvalues_are_sums_of_1d_eigenvalues():
-    from fd import laplacian_2d
-
     lam = np.linalg.eigvalsh(laplacian(6).toarray())
     want = np.sort((lam[:, None] + lam[None, :]).ravel())
     assert np.allclose(np.linalg.eigvalsh(laplacian_2d(6).toarray()), want, rtol=1e-12)
@@ -237,11 +221,16 @@ def test_laplacian_2d_eigenvalues_are_sums_of_1d_eigenvalues():
 
 def test_solve_2d_keeps_x_and_y_apart_for_eigenvector_source():
     # sin(pi x) sin(2 pi y) is an eigenvector; swapping x and y would give a different field
-    from fd import solve_2d
-
     N = 15
     X, Y, U = solve_2d(lambda x, y: 5 * np.pi**2 * np.sin(np.pi * x) * np.sin(2 * np.pi * y), N)
     dx = grid(N)[1]
     lam = lambda k: 4 / dx**2 * np.sin(k * np.pi * dx / 2) ** 2
     assert U.shape == (N, N) and np.allclose(X[:, 0], grid(N)[0]) and np.allclose(Y[0], grid(N)[0])
     assert np.allclose(U, 5 * np.pi**2 / (lam(1) + lam(2)) * np.sin(np.pi * X) * np.sin(2 * np.pi * Y), rtol=1e-10)
+
+
+@pytest.mark.parametrize("call", [lambda: laplacian(9, 4, "mirrror"), lambda: solve_neumann(np.sin, 7, "ghots")])
+def test_unknown_boundary_option_is_rejected(call):
+    # a typo must not silently fall back to another discretization
+    with pytest.raises(ValueError):
+        call()

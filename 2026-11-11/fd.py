@@ -37,6 +37,8 @@ def _edge_row(j, N, order, boundary):
 
 def laplacian(N, order=2, boundary="reduce"):
     """Matrix of -d^2/dx^2 (stencil `order` 2/4/6, boundary "reduce"/"mirror") with u(0)=u(1)=0."""
+    if boundary not in ("reduce", "mirror"):
+        raise ValueError(f"boundary must be 'reduce' or 'mirror', got {boundary!r}")
     dx = grid(N)[1]
     w = STENCILS[order]
     h = len(w) // 2
@@ -68,6 +70,8 @@ def solve_2d(f, N):
 
 def solve_neumann(f, N, bc="ghost"):
     """Solve -u'' = f with u(0) = 0 and u'(1) = 0 ("first": one-sided, "ghost": ghost point); returns (x, u)."""
+    if bc not in ("first", "ghost"):
+        raise ValueError(f"bc must be 'first' or 'ghost', got {bc!r}")
     dx = grid(N)[1]
     x = dx * np.arange(1, N + 2)
     A = scipy.sparse.diags([-1, 2, -1], [-1, 0, 1], shape=(N + 1, N + 1), format="lil")
